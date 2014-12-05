@@ -29,13 +29,13 @@ static const CGSize kFilterCellSize = { 75, 90 };
 
 @interface DBCameraSegueViewController () <UIActionSheetDelegate, UICollectionViewDelegate, UICollectionViewDataSource> {
     DBCameraCropView *_cropView;
-    
+
     NSArray *_cropArray, *_filtersList;
     NSDictionary *_filterMapping;
     CGRect _pFrame, _lFrame;
 }
 
-@property (nonatomic, strong) UIView *navigationBar, *bottomBar;
+@property (nonatomic, strong) UIView *navigationBar;
 @property (nonatomic, strong) UIButton *useButton, *retakeButton, *cropButton;
 @property (nonatomic, strong) DBCameraLoadingView *loadingView;
 @end
@@ -58,9 +58,9 @@ static const CGSize kFilterCellSize = { 75, 90 };
                             @2:[[GPUImageToneCurveFilter alloc] initWithACV:@"amaro"], @3:[[GPUImageGrayscaleFilter alloc] init],
                             @4:[[GPUImageToneCurveFilter alloc] initWithACV:@"Hudson"], @5:[[GPUImageToneCurveFilter alloc] initWithACV:@"mayfair"],
                             @6:[[GPUImageToneCurveFilter alloc] initWithACV:@"Nashville"], @7:[[GPUImageToneCurveFilter alloc] initWithACV:@"Valencia"] };
-        
+
         _selectedFilterIndex = 0;
-        
+
         [self setSourceImage:image];
         [self setPreviewImage:thumb];
         [self setCropRect:(CGRect){ 0, 320 }];
@@ -75,21 +75,21 @@ static const CGSize kFilterCellSize = { 75, 90 };
 {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
-    
+
     [self.view setUserInteractionEnabled:YES];
     [self.view setBackgroundColor:[UIColor blackColor]];
-    
+
     CGFloat cropX = ( CGRectGetWidth( self.frameView.frame) - 320 ) * .5;
     _pFrame = (CGRect){ cropX, ( CGRectGetHeight( self.frameView.frame) - 360 ) * .5, 320, 320 };
     _lFrame = (CGRect){ cropX, ( CGRectGetHeight( self.frameView.frame) - 240) * .5, 320, 240 };
-    
+
     [self setCropRect:self.previewImage.size.width > self.previewImage.size.height ? _lFrame : _pFrame];
-    
+
     [self.view addSubview:self.filtersView];
     [self.view addSubview:self.navigationBar];
     [self.view addSubview:self.bottomBar];
     [self.view setClipsToBounds:YES];
-    
+
     if( self.cameraSegueConfigureBlock )
         self.cameraSegueConfigureBlock(self);
 }
@@ -97,13 +97,13 @@ static const CGSize kFilterCellSize = { 75, 90 };
 - (void) viewWillAppear:(BOOL)animated
 {
     [super viewWillAppear:animated];
-    
+
     if ( _forceQuadCrop ) {
         [self setCropMode:YES];
         [self setCropRect:_pFrame];
         [self reset:YES];
     }
-    
+
     if ( _cropMode )
         [_cropButton setSelected:YES];
 }
@@ -118,7 +118,6 @@ static const CGSize kFilterCellSize = { 75, 90 };
 {
     [button setSelected:!button.isSelected];
     [self setCropMode:button.isSelected];
-    [self setCropRect:button.isSelected ? _pFrame : _lFrame];
     [self reset:YES];
 }
 
@@ -133,7 +132,7 @@ static const CGSize kFilterCellSize = { 75, 90 };
     CGFloat viewHeight = CGRectGetHeight([[UIScreen mainScreen] bounds]) - 64 - 40;
     _cropView = [[DBCameraCropView alloc] initWithFrame:(CGRect){ 0, 64, [[UIScreen mainScreen] bounds].size.width, viewHeight }];
     [_cropView setHidden:YES];
-    
+
     [self setFrameView:_cropView];
 }
 
@@ -179,7 +178,7 @@ static const CGSize kFilterCellSize = { 75, 90 };
 {
     _cropMode = cropMode;
     [self.frameView setHidden:!_cropMode];
-    
+
     // Only hide filters if quad crop is not forced, otherwise filters are not accessible
     if (!_forceQuadCrop) {
         [self.bottomBar setHidden:!_cropMode];
@@ -195,7 +194,7 @@ static const CGSize kFilterCellSize = { 75, 90 };
         [_filtersView setDataSource:self];
         [_filtersView registerClass:[DBCameraFilterCell class] forCellWithReuseIdentifier:kFilterCellIdentifier];
     }
-    
+
     return _filtersView;
 }
 
@@ -205,7 +204,7 @@ static const CGSize kFilterCellSize = { 75, 90 };
         _loadingView = [[DBCameraLoadingView alloc] initWithFrame:(CGRect){ 0, 0, 100, 100 }];
         [_loadingView setCenter:self.view.center];
     }
-    
+
     return _loadingView;
 }
 
@@ -220,7 +219,7 @@ static const CGSize kFilterCellSize = { 75, 90 };
         if ( !_forceQuadCrop )
             [_navigationBar addSubview:self.cropButton];
     }
-    
+
     return _navigationBar;
 }
 
@@ -230,7 +229,7 @@ static const CGSize kFilterCellSize = { 75, 90 };
         _bottomBar = [[UIView alloc] initWithFrame:(CGRect){ 0, CGRectGetHeight([[UIScreen mainScreen] bounds]) - 40, [[UIScreen mainScreen] bounds].size.width, 40 }];
         [_bottomBar setBackgroundColor:[UIColor blackColor]];
         [_bottomBar setHidden:YES];
-        
+
         if ( !_forceQuadCrop ) {
             UIButton *actionsheetButton = [UIButton buttonWithType:UIButtonTypeCustom];
             [actionsheetButton setFrame:_bottomBar.bounds];
@@ -240,7 +239,7 @@ static const CGSize kFilterCellSize = { 75, 90 };
             [_bottomBar addSubview:actionsheetButton];
         }
     }
-    
+
     return _bottomBar;
 }
 
@@ -254,7 +253,7 @@ static const CGSize kFilterCellSize = { 75, 90 };
         [_useButton setFrame:(CGRect){ CGRectGetWidth(self.view.frame) - (CGRectGetWidth(_useButton.frame) + buttonMargin), 0, CGRectGetWidth(_useButton.frame) + buttonMargin, 60 }];
         [_useButton addTarget:self action:@selector(saveImage) forControlEvents:UIControlEventTouchUpInside];
     }
-    
+
     return _useButton;
 }
 
@@ -268,7 +267,7 @@ static const CGSize kFilterCellSize = { 75, 90 };
         [_retakeButton setFrame:(CGRect){ 0, 0, CGRectGetWidth(_retakeButton.frame) + buttonMargin, 60 }];
         [_retakeButton addTarget:self action:@selector(retakeImage) forControlEvents:UIControlEventTouchUpInside];
     }
-    
+
     return _retakeButton;
 }
 
@@ -282,7 +281,7 @@ static const CGSize kFilterCellSize = { 75, 90 };
         [_cropButton setFrame:(CGRect){ CGRectGetMidX(self.view.bounds) - 15, 15, 30, 30 }];
         [_cropButton addTarget:self action:@selector(cropModeAction:) forControlEvents:UIControlEventTouchUpInside];
     }
-    
+
     return _cropButton;
 }
 
@@ -292,7 +291,7 @@ static const CGSize kFilterCellSize = { 75, 90 };
     [button setBackgroundColor:[UIColor clearColor]];
     [button setTitleColor:self.tintColor forState:UIControlStateNormal];
     button.titleLabel.font = [UIFont systemFontOfSize:12];
-    
+
     return button;
 }
 
@@ -314,7 +313,7 @@ static const CGSize kFilterCellSize = { 75, 90 };
     [cell.imageView setImage:[UIImage imageNamed:[NSString stringWithFormat:@"%@Filter", _filtersList[indexPath.row]]]];
     [cell.label setText:[_filtersList[indexPath.row] uppercaseString]];
     [cell.imageView.layer setBorderWidth:(self.selectedFilterIndex.row == indexPath.row) ? 1.0 : 0.0];
-    
+
     return cell;
 }
 
@@ -328,10 +327,10 @@ static const CGSize kFilterCellSize = { 75, 90 };
 - (void) collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath
 {
     [self.view addSubview:self.loadingView];
-    
+
     _selectedFilterIndex = indexPath;
     [self.filtersView reloadData];
-    
+
     dispatch_async(dispatch_get_main_queue(), ^{
         UIImage *filteredImage = [_filterMapping[@(indexPath.row)] imageByFilteringImage:self.sourceImage];
         [self.loadingView removeFromSuperview];
